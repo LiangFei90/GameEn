@@ -1,0 +1,68 @@
+package tms.netjava.com;   
+  
+import java.awt.Color;   
+import java.awt.Graphics;   
+import java.io.DataInputStream;   
+import java.io.DataOutputStream;   
+import java.io.InputStream;   
+import java.io.OutputStream;   
+import java.net.ServerSocket;   
+import java.net.Socket;   
+  
+public class TmsServer extends Thread {   
+  
+    // 创建画布   
+    private Graphics g;   
+  
+    public TmsServer(Graphics g) {   
+        this.g = g;   
+    }   
+  
+    public void run() {   
+        this.startServer(5678);   
+    }   
+  
+    public void startServer(int port) {   
+        try {   
+  
+            System.out.println("创建服务器在端口：" + port);   
+            // 创建服务器   
+            ServerSocket ss = new ServerSocket(port);   
+            // 等待客户机的链接   
+            Socket client = ss.accept();   
+  
+            // 打印客户机的地址   
+            System.out.println("连接进来一个客户机，客户机的地址为"  
+                    + client.getRemoteSocketAddress());   
+  
+            // 取得输入输出流   
+            InputStream ins = client.getInputStream();   
+            OutputStream ous = client.getOutputStream();   
+  
+            // 读写通信数据   
+            DataInputStream dins = new DataInputStream(ins);   
+            DataOutputStream dous = new       DataOutputStream(ous);   
+  
+            // 从客户端得到发来的数据   
+            while (true) {   
+                int x = dins.readInt();   
+                int y = dins.readInt();   
+                int red = dins.readInt();   
+                int green = dins.readInt();   
+                int blue = dins.readInt();   
+                int rd = dins.readInt();   
+  
+                // 清屏   
+                g.setColor(new Color(red, green, blue));   
+                g.fill3DRect(5, 5, 600, 400, false);   
+  
+                // 利用得到坐标将指定的图形画出来   
+                g.setColor(new Color(green, blue, red));   
+                g.fillOval(x, y, rd, rd);   
+            }   
+  
+        } catch (Exception e) {   
+            e.printStackTrace();   
+        }   
+    }   
+}  
