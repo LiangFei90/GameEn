@@ -1,0 +1,117 @@
+package Tms.netjava.com;   
+  
+import java.awt.Color;   
+import java.awt.Graphics;   
+/**  
+ * 客户端画小球的线程  
+ *   
+ * @author sony  
+ *   
+ */  
+public class DrawThread extends Thread {   
+  
+    private Graphics g;   
+    private NetConn nc;   
+    //小球的初始坐标位置   
+    int x=200 ;   
+    int y=300 ;   
+       //设置小球的初试半径，后面碰到四周后，会越来越大，当大到一定程度时也可以缩小（没做）   
+    int rd = 20;   
+    //运动的速度为(1/36)秒每贞,看上去移动的比较平缓   
+    int speed = 1;    
+    int red = 255;   
+    int green = 1;   
+    int blue = 255;   
+    //小球初始角度，是和正上方的夹角的大小   
+    private int angle=30;   
+  
+    // 得到画布的高和宽   
+  
+    public DrawThread(Graphics g) {   
+        this.g = g;   
+        nc = new NetConn();   
+        if (nc.connServer("192.168.56.1", 9090)) {   
+            // 读取数据   
+  
+            nc.start();   
+  
+        }   
+    }   
+  
+    public void run() {   
+  
+        while(true) {   
+            move();   
+            try {   
+                Thread.sleep(1000/36);   
+            } catch (Exception e) {   
+                e.printStackTrace();   
+            }   
+        }   
+    }   
+  
+    /**  
+     * 小球运动的方法  
+     */  
+    public void move() {   
+           
+        //当小球碰到四周时，角度相应的变化，窗体的初始高和宽是（600，400）   
+        if(x<0||x>=600) {   
+            angle = 360 - angle;   
+            //碰到壁后改变小球半径   
+                         rd+=10;   
+        }   
+        if(y<0||y>=400) {   
+            angle = 180 - angle;   
+            rd+=10;   
+        }   
+           
+        //测试代码   
+        System.out.println("x==="+x);   
+        System.out.println("y==="+y);   
+        
+        double x11 = speed*Math.sin(angle*Math.PI/180);   
+       
+        double y11 = speed*Math.cos(angle*Math.PI/180);   
+       
+       //因为计算的值为-1到1之间的小数，调用相应的向下floor()取整，和向上ceil取整方法   
+       //并对计算值的正负进行判断，进行相应的处理，纸上画画就明白了。   
+        if(x11<0) {   
+            x += Math.floor(speed*Math.sin(angle*Math.PI/180));   
+        } else{   
+            x += Math.ceil(speed*Math.sin(angle*Math.PI/180));   
+        }   
+           
+        if(y11<0) {   
+           
+            y -=-Math.ceil(-y11);   
+        } else{   
+            y -=Math.ceil(speed*Math.cos(angle*Math.PI/180));   
+               
+        }   
+           
+        //给背景设置变化的颜色，也是清屏的颜色，变换的，好看一点     
+        red-=2;   
+        if(red<=0) {   
+            red=255;       
+        }   
+        green+=5;   
+        if(green>=0) {   
+            green=255;     
+        }   
+        blue-=7;   
+        if(blue<=0) {   
+            blue=255;   
+        }   
+           
+        //将 数据传到服务器端   
+        nc.sendData(x, y,red,green,blue,rd);   
+           
+        g.setColor(new Color(red,green,blue));   
+        g.fillRect(0, 0, 600, 400);   
+        //滚动的小球的颜色也随之改变   
+        g.setColor(new Color(green,blue,red));   
+        g.fillOval(x, y, rd, rd);   
+           
+    }   
+}  
